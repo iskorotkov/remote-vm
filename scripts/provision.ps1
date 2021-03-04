@@ -171,7 +171,7 @@ if (@($sshKeys).length -lt 1) {
 $sshKey = $sshKeys[0].Id
 
 Write-Output "Creating a new droplet"
-doctl compute droplet create $dropletName --enable-ipv6 --enable-monitoring --enable-private-networking --image $desiredImage --region $desiredRegion --size $desiredSize --ssh-keys $sshKey.Id --tag-names $dropletName --wait
+doctl compute droplet create $dropletName --enable-ipv6 --enable-monitoring --enable-private-networking --image $desiredImage --region $desiredRegion --size $desiredSize --ssh-keys $sshKey --tag-names $dropletName --wait
 
 Write-Output "Obtaining the droplet ip"
 doctl compute droplet list
