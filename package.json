@@ -10,14 +10,19 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:remote-vm.helloWorld"
+        "onCommand:remote-vm.connectToVm",
+        "onCommand:remote-vm.disconnectFromVm"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "remote-vm.helloWorld",
-                "title": "Hello World"
+                "command": "remote-vm.connectToVm",
+                "title": "Connect to VM"
+            },
+            {
+                "command": "remote-vm.disconnectFromVm",
+                "title": "Disconnect from VM"
             }
         ]
     },
@@ -45,5 +50,9 @@
         "mocha": "^8.2.1",
         "typescript": "^4.1.3",
         "vscode-test": "^1.5.0"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "dots-wrapper": "^3.5.2"
     }
 }
