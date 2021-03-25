@@ -53,6 +53,7 @@
     },
     "dependencies": {
         "axios": "^0.21.1",
-        "dots-wrapper": "^3.5.2"
+        "dots-wrapper": "^3.5.2",
+        "tslib": "^2.1.0"
     }
 }
