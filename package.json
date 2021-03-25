@@ -1,7 +1,7 @@
 {
     "name": "remote-vm",
     "displayName": "remote-vm",
-    "description": "Automatically create, setup and connect to Digital Cloud VM for effective remote development",
+    "description": "Automatically create, setup and connect to Digital Ocean VM for effective remote development",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.53.0"

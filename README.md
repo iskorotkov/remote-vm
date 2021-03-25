@@ -1,11 +1,11 @@
 # Remote Development extension
 
-Automatically create, setup and connect to Digital Cloud VM for effective remote development.
+Automatically create, setup and connect to Digital Ocean VM for effective remote development.
 
 ## Features
 
 - [x] automatically create VM and connect to it
-- [ ] add more dialogs for selecting region, VM size, etc
+- [x] add more dialogs for selecting region, VM size, etc
 - [ ] destroy VM when closing the last workspace
 - [ ] create workspace for each project
 - [ ] destroy old workspaces
