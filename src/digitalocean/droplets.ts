@@ -3,10 +3,10 @@ import { IRegion } from 'dots-wrapper/dist/modules/region'
 import { ISize } from 'dots-wrapper/dist/modules/size'
 import { ISshKey } from 'dots-wrapper/dist/modules/ssh-key'
 import { IVolume } from 'dots-wrapper/dist/modules/volume'
-import * as vscode from 'vscode'
 import { Client } from '../client'
+import { enterName } from '../ui/enterName'
+import { selectSingle } from '../ui/selectSingle'
 import { selectRegion } from './regions'
-import { selectDropletSize } from './sizes'
 import { selectSshKeys } from './sshKeys'
 import { selectVolumes } from './volumes'
 
@@ -26,15 +26,7 @@ export async function selectDroplet (droplets: IDroplet[]): Promise<IDroplet> {
     .filter(droplet => droplet.networks.v4
       .find(ip => ip.type === 'public'))
 
-  const selectedDroplet = await vscode.window.showQuickPick(availableDroplets.map(x => ({
-    label: x.name,
-    value: x
-  })), {
-    canPickMany: false,
-    placeHolder: 'Select droplet'
-  })
-
-  return selectedDroplet?.value!
+  return await selectSingle(availableDroplets, 'Select droplet')
 }
 
 export async function createDroplet (client: Client, { name, region, image, size, sshKeys, volumes, tags, userData }: DropletParams): Promise<IDroplet> {
@@ -52,47 +44,34 @@ export async function createDroplet (client: Client, { name, region, image, size
     tags: tags,
     user_data: userData
   })
-  return dropletResponse.data.droplet!
+
+  if (!dropletResponse.data.droplet) {
+    throw Error('Couldn\'t create droplet')
+  }
+
+  return dropletResponse.data.droplet
 }
 
-export async function selectDropletName () {
-  const name = await vscode.window.showInputBox({
-    placeHolder: 'Droplet name',
-    value: 'remote-vm',
-    validateInput (value: string) {
-      if (value.length === 0) {
-        return 'Name can\'t be empty'
-      }
+export async function selectDropletSize (sizes: ISize[], region: IRegion): Promise<ISize> {
+  const availableSizes = sizes
+    .filter(size => size.regions.find(r => r === region.slug))
+    .filter(size => size.available)
 
-      if (!value.match(/[a-zA-Z0-9-_]+/)) {
-        return 'Name must contain only alphanumeric symbols'
-      }
+  const items = availableSizes.map(x => ({
+    name: `${x.slug}: ${x.vcpus} CPUs, ${x.memory} MB RAM, ${x.disk}GB SSD ($${x.price_hourly}/h | $${x.price_monthly}/m)`,
+    value: x
+  }))
 
-      return null
-    }
-  }) ?? ''
-
-  return name
+  const size = await selectSingle(items, 'Select size')
+  return size.value
 }
 
-export async function selectDropletImage () {
-  const image = await vscode.window.showInputBox({
-    placeHolder: 'Droplet image',
-    value: 'ubuntu-20-04-x64',
-    validateInput (value: string) {
-      if (value.length === 0) {
-        return 'Image can\'t be empty'
-      }
+export async function selectDropletName (): Promise<string> {
+  return await enterName('Droplet name', 'remote-vm')
+}
 
-      if (!value.match(/[a-zA-Z0-9-_]+/)) {
-        return 'Image must contain only alphanumeric symbols'
-      }
-
-      return null
-    }
-  }) ?? ''
-
-  return image
+export async function selectDropletImage (): Promise<string> {
+  return await enterName('Droplet image', 'ubuntu-20-04-x64')
 }
 
 export async function configureDroplet (client: Client): Promise<IDroplet> {

@@ -2,13 +2,12 @@ import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
 import { IDroplet } from 'dots-wrapper/dist/modules/droplet'
 import {} from 'tslib'
-import { connectToHost } from './connect'
+import { showVMReadyMessage } from './connect'
 import { configureDroplet, getDropletIP, hasPublicIP, selectDroplet } from './digitalocean/droplets'
 import { readConfig } from './config'
 
 export async function activate (context: vscode.ExtensionContext) {
   const config = readConfig()
-
   const username = 'root'
   const folder = '/home'
 
@@ -32,11 +31,11 @@ export async function activate (context: vscode.ExtensionContext) {
         }
 
         const ip = getDropletIP(fetchedDroplet)
-        await connectToHost(ip, username, folder)
+        await showVMReadyMessage(ip, username, folder)
       } else {
         const droplet = await selectDroplet(droplets)
         const ip = getDropletIP(droplet)
-        await connectToHost(ip, username, folder)
+        await showVMReadyMessage(ip, username, folder)
       }
     } catch (error) {
       vscode.window.showErrorMessage('Error occurred', error)

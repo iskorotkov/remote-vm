@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-export async function enterString (description: string, initialValue: string, regex = /[a-zA-Z0-9-_]+/) {
+export async function enterName (description: string, initialValue: string, regex = /[a-zA-Z0-9-_]+/) {
   const value = await vscode.window.showInputBox({
     placeHolder: description,
     value: initialValue,
@@ -10,12 +10,16 @@ export async function enterString (description: string, initialValue: string, re
       }
 
       if (!value.match(regex)) {
-        return 'Value must contain only alphanumeric symbols'
+        return 'Value must match regex /[a-zA-Z0-9-_]+/'
       }
 
       return null
     }
   })
+
+  if (!value) {
+    throw Error('Nothing was selected')
+  }
 
   return value
 }

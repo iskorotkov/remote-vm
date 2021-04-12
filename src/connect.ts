@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-export async function connectToHost (host: string, username: string, folder: string) {
+export async function showVMReadyMessage (host: string, username: string, folder: string) {
   const copyOption = 'Copy SSH command'
   const connectOption = 'Connect'
 
@@ -16,10 +16,9 @@ export async function connectToHost (host: string, username: string, folder: str
       await vscode.commands.executeCommand('vscode.openFolder', uri, false)
       return null
     } catch (error) {
-      await vscode.window.showErrorMessage('Couldn\'t connect to created VM')
-      return 'Couldn\'t connect to created VM'
+      throw Error('Couldn\'t connect to created VM')
     }
   } else {
-    return 'Nothing was selected'
+    throw Error('Nothing was selected')
   }
 }
