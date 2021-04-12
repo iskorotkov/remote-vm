@@ -55,19 +55,7 @@ export async function createDroplet (client: Client, { name, region, image, size
   return dropletResponse.data.droplet!
 }
 
-export async function configureDroplet (client: Client): Promise<IDroplet> {
-  const regionsResponse = await client.region.listRegions({})
-  const region = await selectRegion(regionsResponse.data.regions)
-
-  const sizesResponse = await client.size.listSizes({})
-  const size = await selectDropletSize(sizesResponse.data.sizes, region)
-
-  const sshKeysResponse = await client.sshKey.listSshKeys({})
-  const sshKeys = await selectSshKeys(sshKeysResponse.data.ssh_keys)
-
-  const volumesResponse = await client.volume.listVolumes({})
-  const volumes = await selectVolumes(volumesResponse.data.volumes, region)
-
+export async function selectDropletName () {
   const name = await vscode.window.showInputBox({
     placeHolder: 'Droplet name',
     value: 'remote-vm',
@@ -84,6 +72,10 @@ export async function configureDroplet (client: Client): Promise<IDroplet> {
     }
   }) ?? ''
 
+  return name
+}
+
+export async function selectDropletImage () {
   const image = await vscode.window.showInputBox({
     placeHolder: 'Droplet image',
     value: 'ubuntu-20-04-x64',
@@ -100,11 +92,35 @@ export async function configureDroplet (client: Client): Promise<IDroplet> {
     }
   }) ?? ''
 
+  return image
+}
+
+export async function configureDroplet (client: Client): Promise<IDroplet> {
+  const regionsResponse = await client.region.listRegions({})
+  const region = await selectRegion(regionsResponse.data.regions)
+
+  const sizesResponse = await client.size.listSizes({})
+  const size = await selectDropletSize(sizesResponse.data.sizes, region)
+
+  const sshKeysResponse = await client.sshKey.listSshKeys({})
+  const sshKeys = await selectSshKeys(sshKeysResponse.data.ssh_keys)
+
+  const volumesResponse = await client.volume.listVolumes({})
+  const volumes = await selectVolumes(volumesResponse.data.volumes, region)
+
+  const name = await selectDropletName()
+  const image = await selectDropletImage()
+
   const tags: string[] = []
   const userData = ''
 
   const droplet = await createDroplet(client, { name, image, region, size, sshKeys, volumes, tags, userData })
   return droplet
+}
+
+export function hasPublicIP (droplet: IDroplet) {
+  return droplet.networks.v4
+    .find(ip => ip.type === 'public') === undefined
 }
 
 export function getDropletIP (droplet: IDroplet) {

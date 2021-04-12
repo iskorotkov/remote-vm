@@ -1,3 +1,18 @@
 import * as vscode from 'vscode'
 
-export const config = vscode.workspace.getConfiguration('remote-vm')
+interface Config {
+    token: string
+}
+
+export function readConfig (): Config {
+  const config = vscode.workspace.getConfiguration('remote-vm')
+  const token = config.get<string>('do-token')
+
+  if (!token) {
+    throw Error("couldn't read config or config is invalid")
+  }
+
+  return {
+    token: token
+  }
+}

@@ -2,24 +2,19 @@ import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
 import { IDroplet } from 'dots-wrapper/dist/modules/droplet'
 import {} from 'tslib'
-import { connectToDroplet } from './connect'
-import { configureDroplet, getDropletIP, selectDroplet } from './digital-ocean/droplets'
+import { connectToHost } from './connect'
+import { configureDroplet, getDropletIP, hasPublicIP, selectDroplet } from './digitalocean/droplets'
+import { readConfig } from './config'
 
 export async function activate (context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('remote-vm')
-  const token = config.get<string>('do-token')
+  const config = readConfig()
 
   const username = 'root'
   const folder = '/home'
 
-  if (token === undefined) {
-    await vscode.window.showErrorMessage('Token wasn\'t found')
-    return
-  }
-
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.connectToVm', async () => {
     const client = createApiClient({
-      token: token
+      token: config.token
     })
 
     try {
@@ -29,8 +24,7 @@ export async function activate (context: vscode.ExtensionContext) {
         const createdDroplet = await configureDroplet(client)
 
         let fetchedDroplet: IDroplet | undefined
-        while (fetchedDroplet === undefined ||
-          fetchedDroplet.networks.v4.find(ip => ip.type === 'public') === undefined) {
+        while (fetchedDroplet === undefined || hasPublicIP(fetchedDroplet)) {
           const dropletResponse = await client.droplet.getDroplet({
             droplet_id: createdDroplet.id
           })
@@ -38,11 +32,11 @@ export async function activate (context: vscode.ExtensionContext) {
         }
 
         const ip = getDropletIP(fetchedDroplet)
-        await connectToDroplet(ip, username, folder)
+        await connectToHost(ip, username, folder)
       } else {
         const droplet = await selectDroplet(droplets)
         const ip = getDropletIP(droplet)
-        await connectToDroplet(ip, username, folder)
+        await connectToHost(ip, username, folder)
       }
     } catch (error) {
       vscode.window.showErrorMessage('Error occurred', error)

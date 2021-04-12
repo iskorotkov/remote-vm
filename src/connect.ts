@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-export async function connectToDroplet (host: string, username: string, folder: string) {
+export async function connectToHost (host: string, username: string, folder: string) {
   const copyOption = 'Copy SSH command'
   const connectOption = 'Connect'
 
