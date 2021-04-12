@@ -13,5 +13,5 @@ export async function selectMultiple<T> (items: (T&{ name: string })[], descript
     throw Error('Nothing was selected')
   }
 
-  return selected?.map(value => value as unknown as T)
+  return selected?.map(item => item.value as unknown as T)
 }

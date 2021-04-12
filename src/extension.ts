@@ -51,7 +51,7 @@ export async function activate (context: vscode.ExtensionContext) {
         throw Error('Nothing was selected')
       }
     } catch (error) {
-      vscode.window.showErrorMessage('Error occurred', error)
+      vscode.window.showErrorMessage(`Error occurred: ${error}`)
     }
   }))
 
