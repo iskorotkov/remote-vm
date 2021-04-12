@@ -2,9 +2,9 @@ import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
 import { IDroplet } from 'dots-wrapper/dist/modules/droplet'
 import {} from 'tslib'
-import { showVMReadyMessage } from './connect'
-import { configureDroplet, getDropletIP, hasPublicIP, selectDroplet } from './digitalocean/droplets'
+import { createDroplet, getDropletIP, hasPublicIP, selectDroplet } from './digitalocean/droplets'
 import { readConfig } from './config'
+import { connect, connectionString } from './connect'
 
 export async function activate (context: vscode.ExtensionContext) {
   const config = readConfig()
@@ -16,11 +16,13 @@ export async function activate (context: vscode.ExtensionContext) {
       token: config.token
     })
 
+    let host = ''
+
     try {
       const dropletsResponse = await client.droplet.listDroplets({})
       const droplets = dropletsResponse.data.droplets
       if (droplets.length === 0) {
-        const createdDroplet = await configureDroplet(client)
+        const createdDroplet = await createDroplet(client)
 
         let fetchedDroplet: IDroplet | undefined
         while (fetchedDroplet === undefined || hasPublicIP(fetchedDroplet)) {
@@ -30,12 +32,23 @@ export async function activate (context: vscode.ExtensionContext) {
           fetchedDroplet = dropletResponse.data.droplet
         }
 
-        const ip = getDropletIP(fetchedDroplet)
-        await showVMReadyMessage(ip, username, folder)
+        host = getDropletIP(fetchedDroplet)
       } else {
         const droplet = await selectDroplet(droplets)
-        const ip = getDropletIP(droplet)
-        await showVMReadyMessage(ip, username, folder)
+        host = getDropletIP(droplet)
+      }
+
+      const copyOption = 'Copy SSH command'
+      const connectOption = 'Connect'
+
+      const selection = await vscode.window.showInformationMessage('Remote VM is ready', copyOption, connectOption)
+
+      if (selection === copyOption) {
+        await vscode.env.clipboard.writeText(connectionString(host, username))
+      } else if (selection === connectOption) {
+        await connect(host, username, folder)
+      } else {
+        throw Error('Nothing was selected')
       }
     } catch (error) {
       vscode.window.showErrorMessage('Error occurred', error)
