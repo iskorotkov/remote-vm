@@ -12,12 +12,7 @@
     "activationEvents": [
         "onCommand:remote-vm.createVM",
         "onCommand:remote-vm.destroyVM",
-        "onCommand:remote-vm.connectToVm",
-        "onCommand:remote-vm.disconnectFromVm",
-        "onCommand:remote-vm.createVolume",
-        "onCommand:remote-vm.destroyVolume",
-        "onCommand:remote-vm.attachVolume",
-        "onCommand:remote-vm.detachVolume"
+        "onCommand:remote-vm.connectToVm"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -33,26 +28,6 @@
             {
                 "command": "remote-vm.connectToVm",
                 "title": "Connect to VM"
-            },
-            {
-                "command": "remote-vm.disconnectFromVm",
-                "title": "Disconnect from VM"
-            },
-            {
-                "command": "remote-vm.createVolume",
-                "title": "Create volume"
-            },
-            {
-                "command": "remote-vm.destroyVolume",
-                "title": "Destroy volume"
-            },
-            {
-                "command": "remote-vm.attachVolume",
-                "title": "Attach volume"
-            },
-            {
-                "command": "remote-vm.detachVolume",
-                "title": "Detach volume"
             }
         ]
     },
