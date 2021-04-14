@@ -1,8 +1,9 @@
 import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
 import {} from 'tslib'
-import { createDroplet, getDropletIP, hasPublicIP, selectDroplet } from './digitalocean/droplets'
+import { createDroplet, getDropletIP, hasPublicIP, selectDroplet } from './digitalocean'
 import { connectToHost } from './connect'
+import { IDroplet } from 'dots-wrapper/dist/modules/droplet'
 
 export async function activate (context: vscode.ExtensionContext) {
   const username = 'root'
@@ -23,19 +24,15 @@ export async function activate (context: vscode.ExtensionContext) {
     try {
       const createdDroplet = await createDroplet(client)
 
-      const tryToConnect = async () => {
+      let droplet: IDroplet | undefined
+      while (!droplet || !hasPublicIP(droplet)) {
         const dropletResponse = await client.droplet.getDroplet({ droplet_id: createdDroplet.id })
-        const droplet = dropletResponse.data.droplet
-
-        if (droplet && hasPublicIP(droplet)) {
-          const host = getDropletIP(droplet)
-          await connectToHost(host, username, path)
-        } else {
-          setTimeout(tryToConnect, 1000)
-        }
+        droplet = dropletResponse.data.droplet
       }
 
-      setTimeout(tryToConnect, 1000)
+      const host = getDropletIP(droplet)
+
+      await connectToHost(host, username, path)
     } catch (error) {
       vscode.window.showErrorMessage(`Error occurred: ${error}`)
     }
