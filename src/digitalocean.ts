@@ -8,52 +8,6 @@ import * as vscode from 'vscode'
 
 export type Client = ReturnType<typeof createApiClient>
 
-export async function createDroplet (client: Client): Promise<IDroplet> {
-  const regionsRequest = client.region.listRegions({})
-  const sizesRequest = client.size.listSizes({})
-  const sshKeysRequest = client.sshKey.listSshKeys({})
-  const volumesRequest = client.volume.listVolumes({})
-
-  const regionsResponse = await regionsRequest
-  const region = await selectRegion(regionsResponse.data.regions)
-
-  const sizesResponse = await sizesRequest
-  const size = await selectSize(sizesResponse.data.sizes, region)
-
-  const sshKeysResponse = await sshKeysRequest
-  const sshKeys = await selectSshKeys(sshKeysResponse.data.ssh_keys)
-
-  const volumesResponse = await volumesRequest
-  const volumes = await selectVolumes(volumesResponse.data.volumes, region)
-
-  const name = await enterDropletName('Droplet name', 'remote-vm')
-  const image = await enterDropletImage('Droplet image', 'ubuntu-20-04-x64')
-
-  const tags: string[] = []
-  const userData = ''
-
-  const dropletResponse = await client.droplet.createDroplet({
-    name: name,
-    image: image,
-    region: region.slug,
-    size: size.slug,
-    backups: false,
-    ipv6: true,
-    monitoring: true,
-    private_networking: true,
-    ssh_keys: sshKeys.map(key => key.id),
-    volumes: volumes.map(volume => volume.id),
-    tags: tags,
-    user_data: userData
-  })
-
-  if (!dropletResponse.data.droplet) {
-    throw Error('Couldn\'t create droplet')
-  }
-
-  return dropletResponse.data.droplet
-}
-
 export function hasPublicIP (droplet: IDroplet) {
   return droplet.networks.v4
     .find(ip => ip.type === 'public') !== undefined
