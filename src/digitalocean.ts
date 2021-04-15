@@ -9,16 +9,21 @@ import * as vscode from 'vscode'
 export type Client = ReturnType<typeof createApiClient>
 
 export async function createDroplet (client: Client): Promise<IDroplet> {
-  const regionsResponse = await client.region.listRegions({})
+  const regionsRequest = client.region.listRegions({})
+  const sizesRequest = client.size.listSizes({})
+  const sshKeysRequest = client.sshKey.listSshKeys({})
+  const volumesRequest = client.volume.listVolumes({})
+
+  const regionsResponse = await regionsRequest
   const region = await selectRegion(regionsResponse.data.regions)
 
-  const sizesResponse = await client.size.listSizes({})
+  const sizesResponse = await sizesRequest
   const size = await selectSize(sizesResponse.data.sizes, region)
 
-  const sshKeysResponse = await client.sshKey.listSshKeys({})
+  const sshKeysResponse = await sshKeysRequest
   const sshKeys = await selectSshKeys(sshKeysResponse.data.ssh_keys)
 
-  const volumesResponse = await client.volume.listVolumes({})
+  const volumesResponse = await volumesRequest
   const volumes = await selectVolumes(volumesResponse.data.volumes, region)
 
   const name = await enterDropletName('Droplet name', 'remote-vm')
