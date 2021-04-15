@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
 import {} from 'tslib'
-import { enterDropletImage, enterDropletName, getDropletIP, hasPublicIP, selectDroplet, selectRegion, selectSize, selectSshKeys, selectVolumes } from './digitalocean'
+import { enterDropletImage, enterName, enterSize, getDropletIP, hasPublicIP, selectDroplet, selectRegion, selectSize, selectSshKeys, selectVolume, selectVolumes } from './digitalocean'
 import { connectToHost } from './connect'
 
 export async function activate (context: vscode.ExtensionContext) {
@@ -73,7 +73,7 @@ export async function activate (context: vscode.ExtensionContext) {
           increment: 5
         })
 
-        const name = await enterDropletName('Droplet name', 'remote-vm')
+        const name = await enterName('Droplet name', 'remote-vm')
 
         progress.report({
           message: 'Entering image',
@@ -123,7 +123,7 @@ export async function activate (context: vscode.ExtensionContext) {
 
         progress.report({
           message: 'Waiting for VM startup',
-          increment: 20
+          increment: 10
         })
 
         let completed = false
@@ -148,6 +148,11 @@ export async function activate (context: vscode.ExtensionContext) {
 
               await connectToHost(host, username, path)
               completed = true
+
+              progress.report({
+                message: 'Completed',
+                increment: 10
+              })
             }, 10000)
           } else {
             setTimeout(tryToConnect, 1000)
@@ -197,11 +202,16 @@ export async function activate (context: vscode.ExtensionContext) {
         const host = getDropletIP(droplet)
 
         progress.report({
-          message: 'Connecting to VM',
-          increment: 50
+          message: 'Relaunching editor',
+          increment: 40
         })
 
         await connectToHost(host, username, path)
+
+        progress.report({
+          message: 'Completed',
+          increment: 10
+        })
       } catch (error) {
         vscode.window.showErrorMessage(`Error occurred: ${error}`)
       }
@@ -231,11 +241,123 @@ export async function activate (context: vscode.ExtensionContext) {
         const droplet = await selectDroplet(droplets)
 
         progress.report({
-          message: 'Deleting VM',
-          increment: 50
+          message: 'Destroying VM',
+          increment: 40
         })
 
         await client.droplet.deleteDroplet({ droplet_id: droplet.id })
+
+        progress.report({
+          message: 'Completed',
+          increment: 10
+        })
+      } catch (error) {
+        vscode.window.showErrorMessage(`Error occurred: ${error}`)
+      }
+    })
+  }))
+
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVolume', async () => {
+    await vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Create volume',
+      cancellable: false
+    }, async progress => {
+      try {
+        progress.report({
+          message: 'Fetching data',
+          increment: 10
+        })
+
+        const regionsRequest = client.region.listRegions({})
+
+        progress.report({
+          message: 'Selecting region',
+          increment: 10
+        })
+
+        const regionsResponse = await regionsRequest
+        const region = await selectRegion(regionsResponse.data.regions)
+
+        progress.report({
+          message: 'Entering size',
+          increment: 10
+        })
+
+        const size = await enterSize('Volume size', '1')
+
+        progress.report({
+          message: 'Entering name',
+          increment: 10
+        })
+
+        const name = await enterName('Volume name', 'remove-vm-volume')
+
+        const description = ''
+        const filesystem = 'ext4'
+        const tags: string[] = []
+
+        progress.report({
+          message: 'Creating volume',
+          increment: 50
+        })
+
+        const volumeResponse = await client.volume.createVolume({
+          name: name,
+          description: description,
+          filesystem_type: filesystem,
+          size_gigabytes: parseInt(size),
+          region: region.slug,
+          tags: tags
+        })
+
+        if (!volumeResponse.data.volume) {
+          throw Error('Couldn\'t create volume')
+        }
+
+        progress.report({
+          message: 'Completed',
+          increment: 10
+        })
+      } catch (error) {
+        vscode.window.showErrorMessage(`Error occurred: ${error}`)
+      }
+    })
+  }))
+
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.destroyVolume', async () => {
+    await vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Destroy volume',
+      cancellable: false
+    }, async progress => {
+      try {
+        progress.report({
+          message: 'Fetching list of volumes',
+          increment: 10
+        })
+
+        const volumesResponse = await client.volume.listVolumes({})
+        const volumes = volumesResponse.data.volumes
+
+        progress.report({
+          message: 'Selecting volume',
+          increment: 40
+        })
+
+        const volume = await selectVolume(volumes)
+
+        progress.report({
+          message: 'Destroying volume',
+          increment: 40
+        })
+
+        await client.volume.deleteVolume({ volume_id: volume.id })
+
+        progress.report({
+          message: 'Completed',
+          increment: 10
+        })
       } catch (error) {
         vscode.window.showErrorMessage(`Error occurred: ${error}`)
       }

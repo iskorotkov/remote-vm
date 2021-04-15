@@ -24,7 +24,7 @@ export function getDropletIP (droplet: IDroplet) {
   return publicIps[0].ip_address
 }
 
-export async function enterDropletName (description: string, initialValue: string) {
+export async function enterName (description: string, initialValue: string) {
   const regex = /[a-zA-Z0-9-_]+/
 
   const value = await vscode.window.showInputBox({
@@ -86,11 +86,11 @@ export function formatDropletInfo (droplet: IDroplet) {
 
 export async function selectVolumes (volumes: IVolume[], region: IRegion): Promise<IVolume[]> {
   const items = volumes
-    .filter(volume => volume.region === region)
+    .filter(volume => volume.region.slug === region.slug)
     .map(volume => ({
       value: volume,
       label: volume.name,
-      description: volume.size_gigabytes.toString(),
+      description: formatVolumeInfo(volume),
       picked: true
     }))
 
@@ -154,6 +154,7 @@ export async function selectRegion (regions: IRegion[]): Promise<IRegion> {
 
 export async function selectDroplet (droplets: IDroplet[]): Promise<IDroplet> {
   const items = droplets
+    .filter(droplet => droplet.status === 'active')
     .filter(droplet => droplet.networks.v4
       .find(ip => ip.type === 'public'))
     .map(droplet => ({
@@ -198,4 +199,56 @@ export async function selectSize (sizes: ISize[], region: IRegion): Promise<ISiz
   }
 
   return selected?.value as ISize
+}
+
+export function formatVolumeInfo (volume: IVolume) {
+  return `${volume.size_gigabytes} GB`
+}
+
+export async function selectVolume (volumes: IVolume[]): Promise<IVolume> {
+  const items = volumes
+    .map(volume => ({
+      value: volume,
+      label: volume.name,
+      description: formatVolumeInfo(volume)
+    }))
+
+  const selected = await vscode.window.showQuickPick(items, {
+    canPickMany: false,
+    matchOnDetail: true,
+    matchOnDescription: true,
+    placeHolder: 'Select volume'
+  })
+
+  if (!selected) {
+    throw Error('Nothing was selected')
+  }
+
+  return selected?.value as IVolume
+}
+
+export async function enterSize (description: string, initialValue: string) {
+  const regex = /[0-9]+/
+
+  const value = await vscode.window.showInputBox({
+    placeHolder: description,
+    value: initialValue,
+    validateInput (value: string) {
+      if (value.length === 0) {
+        return 'Value can\'t be empty'
+      }
+
+      if (!value.match(regex)) {
+        return `Value must match regex ${regex}`
+      }
+
+      return null
+    }
+  })
+
+  if (!value) {
+    throw Error('Nothing was selected')
+  }
+
+  return value
 }
