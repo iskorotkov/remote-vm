@@ -3,7 +3,6 @@ import { createApiClient } from 'dots-wrapper'
 import {} from 'tslib'
 import { enterDropletImage, enterDropletName, getDropletIP, hasPublicIP, selectDroplet, selectRegion, selectSize, selectSshKeys, selectVolumes } from './digitalocean'
 import { connectToHost } from './connect'
-import { IDroplet } from 'dots-wrapper/dist/modules/droplet'
 
 export async function activate (context: vscode.ExtensionContext) {
   const username = 'root'
@@ -23,7 +22,7 @@ export async function activate (context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVM', async () => {
     await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: 'VM creation',
+      title: 'Create VM',
       cancellable: false
     }, async progress => {
       try {
@@ -127,20 +126,47 @@ export async function activate (context: vscode.ExtensionContext) {
           increment: 20
         })
 
-        let droplet: IDroplet | undefined
-        while (!droplet || !hasPublicIP(droplet)) {
+        let completed = false
+
+        const tryToConnect = async () => {
           const dropletResponse = await client.droplet.getDroplet({ droplet_id: createdDroplet.id })
-          droplet = dropletResponse.data.droplet
+          const droplet = dropletResponse.data.droplet
+
+          if (droplet && droplet.status === 'active' && hasPublicIP(droplet)) {
+            const host = getDropletIP(droplet)
+
+            progress.report({
+              message: 'Connecting to VM',
+              increment: 10
+            })
+
+            setTimeout(async () => {
+              progress.report({
+                message: 'Relaunching editor',
+                increment: 10
+              })
+
+              await connectToHost(host, username, path)
+              completed = true
+            }, 10000)
+          } else {
+            setTimeout(tryToConnect, 1000)
+          }
         }
 
-        const host = getDropletIP(droplet)
+        await tryToConnect()
 
-        progress.report({
-          message: 'Connecting to VM',
-          increment: 20
+        return new Promise<void>(resolve => {
+          const checkCompleted = async () => {
+            if (completed) {
+              resolve()
+            } else {
+              setTimeout(checkCompleted, 1000)
+            }
+          }
+
+          checkCompleted()
         })
-
-        await connectToHost(host, username, path)
       } catch (error) {
         vscode.window.showErrorMessage(`Error occurred: ${error}`)
       }
@@ -150,7 +176,7 @@ export async function activate (context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.connectToVm', async () => {
     await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: 'Connecting to VM',
+      title: 'Connect to VM',
       cancellable: false
     }, async progress => {
       try {
@@ -185,7 +211,7 @@ export async function activate (context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.destroyVM', async () => {
     await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: 'Destroying VM',
+      title: 'Destroy VM',
       cancellable: false
     }, async progress => {
       try {
