@@ -1,0 +1,76 @@
+{
+    "name": "remote-vm",
+    "displayName": "remote-vm",
+    "description": "Automatically create, setup and connect to Digital Ocean VM for effective remote development",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.53.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:remote-vm.createVM",
+        "onCommand:remote-vm.destroyVM",
+        "onCommand:remote-vm.connectToVm",
+        "onCommand:remote-vm.createVolume",
+        "onCommand:remote-vm.destroyVolume"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "remote-vm.createVM",
+                "title": "Create VM"
+            },
+            {
+                "command": "remote-vm.destroyVM",
+                "title": "Destroy VM"
+            },
+            {
+                "command": "remote-vm.connectToVm",
+                "title": "Connect to VM"
+            }
+            ,
+            {
+                "command": "remote-vm.createVolume",
+                "title": "Create volume"
+            }
+            ,
+            {
+                "command": "remote-vm.destroyVolume",
+                "title": "Destroy volume"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "yarn run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "yarn run compile && yarn run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.1.3",
+        "@types/mocha": "^8.0.4",
+        "@types/node": "^12.11.7",
+        "@types/vscode": "^1.53.0",
+        "@typescript-eslint/eslint-plugin": "^4.16.1",
+        "@typescript-eslint/parser": "^4.16.1",
+        "eslint": "^7.12.1",
+        "eslint-config-standard": "^16.0.2",
+        "eslint-plugin-import": "^2.22.1",
+        "eslint-plugin-node": "^11.1.0",
+        "eslint-plugin-promise": "^4.2.1",
+        "glob": "^7.1.6",
+        "mocha": "^8.2.1",
+        "typescript": "^4.1.3",
+        "vscode-test": "^1.5.0"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "dots-wrapper": "^3.5.2",
+        "tslib": "^2.1.0"
+    }
+}
