@@ -40,9 +40,9 @@ export async function activate (context: vscode.ExtensionContext) {
     addDestroyVolumeCommand(context, client)
 
     Sentry.captureMessage('extension was successfully activated', Sentry.Severity.Log)
-  } catch (e) {
-    Sentry.captureException(e)
-    await vscode.window.showErrorMessage(`Error occurred: ${e}`)
+  } catch (error) {
+    Sentry.captureException(error)
+    await vscode.window.showErrorMessage(`Error occurred: ${error}`)
   }
 }
 

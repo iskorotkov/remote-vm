@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { enterDropletImage, enterName, getDropletIP, hasPublicIP, selectRegion, selectSize, selectSshKeys, selectVolumes, Client } from '../services/digitalocean'
 import { connectToHost } from '../utils/connect'
 import { username, path } from '../extension'
+import * as Sentry from '@sentry/node'
 
 export function addCreateVMCommand (context: vscode.ExtensionContext, client: Client) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVM', async () => {
@@ -149,6 +150,7 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
         return new Promise<void>(resolve => {
           const checkCompleted = async () => {
             if (completed) {
+              Sentry.captureMessage('successfully created vm', Sentry.Severity.Log)
               resolve()
             } else {
               setTimeout(checkCompleted, 1000)
@@ -158,7 +160,8 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
           checkCompleted()
         })
       } catch (error) {
-        vscode.window.showErrorMessage(`Error occurred: ${error}`)
+        Sentry.captureException(error)
+        await vscode.window.showErrorMessage(`Error occurred: ${error}`)
       }
     })
   }))
