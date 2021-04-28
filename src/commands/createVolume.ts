@@ -9,6 +9,11 @@ export function addCreateVolumeCommand (context: vscode.ExtensionContext, client
       title: 'Create volume',
       cancellable: false
     }, async (progress) => {
+      const tx = Sentry.startTransaction({
+        name: 'Create volume dialog',
+        op: 'create-volume'
+      })
+
       try {
         progress.report({
           message: 'Fetching data',
@@ -70,6 +75,8 @@ export function addCreateVolumeCommand (context: vscode.ExtensionContext, client
       } catch (error) {
         Sentry.captureException(error)
         await vscode.window.showErrorMessage(`Error occurred: ${error}`)
+      } finally {
+        tx.finish()
       }
     })
   }))

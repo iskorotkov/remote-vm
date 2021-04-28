@@ -11,6 +11,11 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
       title: 'Create VM',
       cancellable: false
     }, async (progress) => {
+      const dialogsTx = Sentry.startTransaction({
+        name: 'Create VM dialog',
+        op: 'create-vm'
+      })
+
       try {
         progress.report({
           message: 'Fetching data',
@@ -81,7 +86,7 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
           increment: 5
         })
 
-        const dropletResponse = await client.droplet.createDroplet({
+        const params = {
           name: name,
           image: image,
           region: region.slug,
@@ -94,7 +99,9 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
           volumes: volumes.map(volume => volume.id),
           tags: tags,
           user_data: userData
-        })
+        }
+
+        const dropletResponse = await client.droplet.createDroplet(params)
 
         if (!dropletResponse.data.droplet) {
           throw Error('Couldn\'t create droplet')
@@ -112,56 +119,60 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
           increment: 10
         })
 
-        let completed = false
-
-        const tryToConnect = async () => {
-          const dropletResponse = await client.droplet.getDroplet({ droplet_id: createdDroplet.id })
-          const droplet = dropletResponse.data.droplet
-
-          if (droplet && droplet.status === 'active' && hasPublicIP(droplet)) {
-            const host = getDropletIP(droplet)
-
-            progress.report({
-              message: 'Connecting to VM',
-              increment: 10
-            })
-
-            setTimeout(async () => {
-              progress.report({
-                message: 'Relaunching editor',
-                increment: 10
-              })
-
-              await connectToHost(host, username, path)
-              completed = true
-
-              progress.report({
-                message: 'Completed',
-                increment: 10
-              })
-            }, 10000)
-          } else {
-            setTimeout(tryToConnect, 1000)
-          }
-        }
-
-        await tryToConnect()
-
         return new Promise<void>(resolve => {
-          const checkCompleted = async () => {
-            if (completed) {
-              Sentry.captureMessage('successfully created vm', Sentry.Severity.Log)
-              resolve()
-            } else {
-              setTimeout(checkCompleted, 1000)
+          const connectionTx = dialogsTx.startChild({
+            op: 'connect-to-vm',
+            data: params
+          })
+
+          const tryToConnect = async () => {
+            try {
+              const dropletResponse = await client.droplet.getDroplet({ droplet_id: createdDroplet.id })
+              const droplet = dropletResponse.data.droplet
+
+              if (droplet && droplet.status === 'active' && hasPublicIP(droplet)) {
+                const host = getDropletIP(droplet)
+
+                progress.report({
+                  message: 'Connecting to VM',
+                  increment: 10
+                })
+
+                setTimeout(async () => {
+                  progress.report({
+                    message: 'Relaunching editor',
+                    increment: 10
+                  })
+
+                  await connectToHost(host, username, path)
+
+                  progress.report({
+                    message: 'Completed',
+                    increment: 10
+                  })
+
+                  Sentry.captureMessage('successfully created vm', Sentry.Severity.Log)
+                  connectionTx.finish()
+                  dialogsTx.finish()
+
+                  resolve()
+                }, 10000)
+              } else {
+                setTimeout(tryToConnect, 1000)
+              }
+            } catch (error) {
+              connectionTx.finish()
+              dialogsTx.finish()
+              await vscode.window.showErrorMessage(`Error occurred when connecting to droplet: ${error}`)
             }
           }
 
-          checkCompleted()
+          tryToConnect()
         })
       } catch (error) {
         Sentry.captureException(error)
-        await vscode.window.showErrorMessage(`Error occurred: ${error}`)
+        dialogsTx.finish()
+        await vscode.window.showErrorMessage(`Error occurred when creating droplet: ${error}`)
       }
     })
   }))
