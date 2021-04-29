@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
-import { } from 'tslib'
 import * as Sentry from '@sentry/node'
 import { environment, release } from './meta'
 import { addCreateVMCommand } from './commands/createVM'

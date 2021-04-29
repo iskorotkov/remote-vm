@@ -1,5 +1,4 @@
 .vs
-# .vscode
 .idea
 .terraform
 node_modules
@@ -7,3 +6,4 @@ out
 
 **/.terraform.lock.hcl
 **/*.tfvars
+**/*.vsix
