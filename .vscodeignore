@@ -9,3 +9,9 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+.vs
+.idea
+.terraform
+**/.terraform.lock.hcl
+**/*.tfvars

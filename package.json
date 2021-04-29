@@ -1,8 +1,15 @@
 {
     "name": "remote-vm",
-    "displayName": "remote-vm",
+    "displayName": "Remote VM",
     "description": "Automatically create, setup and connect to Digital Ocean VM for effective remote development",
-    "version": "0.0.1",
+    "version": "0.1.0",
+    "author": {
+        "name": "Ivan Korotkov",
+        "email": "korotkov.ivan.s@gmail.com",
+        "url": "https://github.com/iskorotkov"
+    },
+    "publisher": "Ivan Korotkov",
+    "icon": "https://github.com/iskorotkov/remote-vm/blob/master/resources/icon.png",
     "engines": {
         "vscode": "^1.53.0"
     },
