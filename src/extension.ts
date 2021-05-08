@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import { createApiClient } from 'dots-wrapper'
 import * as Sentry from '@sentry/node'
+import { RewriteFrames } from '@sentry/integrations'
 import { environment, release } from './meta'
 import { addCreateVMCommand } from './commands/createVM'
 import { addConnectToVMCommand } from './commands/connectToVM'
@@ -16,7 +17,12 @@ export async function activate (context: vscode.ExtensionContext) {
     dsn: 'https://4a44f71cb9314f6cb6fbfdada15a8f8b@o575650.ingest.sentry.io/5728149',
     tracesSampleRate: 1.0,
     environment: environment,
-    release: release
+    release: release,
+    integrations: [
+      new RewriteFrames({
+        root: './src/'
+      })
+    ]
   })
 
   const token = vscode.workspace.getConfiguration('remote-vm').get<string>('do-token')
