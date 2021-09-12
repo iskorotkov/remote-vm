@@ -4,6 +4,6 @@
 node_modules
 out
 
-**/.terraform.lock.hcl
-**/*.tfvars
-**/*.vsix
+.terraform.lock.hcl
+*.tfvars
+*.vsix

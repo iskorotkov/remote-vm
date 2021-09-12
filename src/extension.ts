@@ -1,35 +1,13 @@
-import { createApiClient } from 'dots-wrapper'
 import * as vscode from 'vscode'
-import { addConnectToVMCommand } from './commands/connectToVM'
-import { addCreateVMCommand } from './commands/createVM'
-import { addCreateVolumeCommand } from './commands/createVolume'
-import { addDestroyVMCommand } from './commands/destroyVM'
-import { addDestroyVolumeCommand } from './commands/destroyVolume'
-
-export const username = 'root'
-export const path = '/home'
+import { loginInBrowser } from './commands'
+import { OAuthUriHandler } from './handlers'
 
 export async function activate (context: vscode.ExtensionContext) {
-  const token = vscode.workspace.getConfiguration('remote-vm').get<string>('do-token')
+  console.log('activating remote-vm extension')
 
-  if (!token) {
-    await vscode.window.showWarningMessage('No token was specified in config. Specify token and retry')
-    return
-  }
+  context.subscriptions.push(vscode.window.registerUriHandler(new OAuthUriHandler()))
 
-  try {
-    const client = createApiClient({
-      token: token
-    })
-
-    addCreateVMCommand(context, client)
-    addConnectToVMCommand(context, client)
-    addDestroyVMCommand(context, client)
-    addCreateVolumeCommand(context, client)
-    addDestroyVolumeCommand(context, client)
-  } catch (error) {
-    await vscode.window.showErrorMessage(`Error occurred: ${error}`)
-  }
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.login', loginInBrowser))
 }
 
 export function deactivate () { }

@@ -6,8 +6,8 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension",
-			"type": "extensionHost",
+			"name": "Launch Extension",
+			"type": "pwa-extensionHost",
 			"request": "launch",
 			"args": [
 				"--disable-extensions",
@@ -20,7 +20,7 @@
 		},
 		{
 			"name": "Extension Tests",
-			"type": "extensionHost",
+			"type": "pwa-extensionHost",
 			"request": "launch",
 			"args": [
 				"--disable-extensions",
