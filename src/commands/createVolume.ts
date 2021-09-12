@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
-import { enterName, enterSize, selectRegion, Client } from '../services/digitalocean'
-import * as Sentry from '@sentry/node'
+import { Client, enterName, enterSize, selectRegion } from '../services/digitalocean'
 
 export function addCreateVolumeCommand (context: vscode.ExtensionContext, client: Client) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVolume', async () => {
@@ -9,11 +8,6 @@ export function addCreateVolumeCommand (context: vscode.ExtensionContext, client
       title: 'Create volume',
       cancellable: false
     }, async (progress) => {
-      const tx = Sentry.startTransaction({
-        name: 'Create volume dialog',
-        op: 'create-volume'
-      })
-
       try {
         progress.report({
           message: 'Fetching data',
@@ -70,13 +64,8 @@ export function addCreateVolumeCommand (context: vscode.ExtensionContext, client
           message: 'Completed',
           increment: 10
         })
-
-        Sentry.captureMessage('successfully created volume', Sentry.Severity.Log)
       } catch (error) {
-        Sentry.captureException(error)
         await vscode.window.showErrorMessage(`Error occurred: ${error}`)
-      } finally {
-        tx.finish()
       }
     })
   }))

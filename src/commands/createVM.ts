@@ -1,8 +1,7 @@
 import * as vscode from 'vscode'
-import { enterDropletImage, enterName, getDropletIP, hasPublicIP, selectRegion, selectSize, selectSshKeys, selectVolumes, Client } from '../services/digitalocean'
+import { path, username } from '../extension'
+import { Client, enterDropletImage, enterName, getDropletIP, hasPublicIP, selectRegion, selectSize, selectSshKeys, selectVolumes } from '../services/digitalocean'
 import { connectToHost } from '../utils/connect'
-import { username, path } from '../extension'
-import * as Sentry from '@sentry/node'
 
 export function addCreateVMCommand (context: vscode.ExtensionContext, client: Client) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVM', async () => {
@@ -11,11 +10,6 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
       title: 'Create VM',
       cancellable: false
     }, async (progress) => {
-      const dialogsTx = Sentry.startTransaction({
-        name: 'Create VM dialog',
-        op: 'create-vm'
-      })
-
       try {
         progress.report({
           message: 'Fetching data',
@@ -120,11 +114,6 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
         })
 
         return new Promise<void>(resolve => {
-          const connectionTx = dialogsTx.startChild({
-            op: 'connect-to-vm',
-            data: params
-          })
-
           const tryToConnect = async () => {
             try {
               const dropletResponse = await client.droplet.getDroplet({ droplet_id: createdDroplet.id })
@@ -151,18 +140,12 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
                     increment: 10
                   })
 
-                  Sentry.captureMessage('successfully created vm', Sentry.Severity.Log)
-                  connectionTx.finish()
-                  dialogsTx.finish()
-
                   resolve()
                 }, 10000)
               } else {
                 setTimeout(tryToConnect, 1000)
               }
             } catch (error) {
-              connectionTx.finish()
-              dialogsTx.finish()
               await vscode.window.showErrorMessage(`Error occurred when connecting to droplet: ${error}`)
             }
           }
@@ -170,8 +153,6 @@ export function addCreateVMCommand (context: vscode.ExtensionContext, client: Cl
           tryToConnect()
         })
       } catch (error) {
-        Sentry.captureException(error)
-        dialogsTx.finish()
         await vscode.window.showErrorMessage(`Error occurred when creating droplet: ${error}`)
       }
     })

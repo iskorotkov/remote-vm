@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
-import { selectVolume, Client } from '../services/digitalocean'
-import * as Sentry from '@sentry/node'
+import { Client, selectVolume } from '../services/digitalocean'
 
 export function addDestroyVolumeCommand (context: vscode.ExtensionContext, client: Client) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.destroyVolume', async () => {
@@ -36,10 +35,7 @@ export function addDestroyVolumeCommand (context: vscode.ExtensionContext, clien
           message: 'Completed',
           increment: 10
         })
-
-        Sentry.captureMessage('successfully destroyed volume', Sentry.Severity.Log)
       } catch (error) {
-        Sentry.captureException(error)
         await vscode.window.showErrorMessage(`Error occurred: ${error}`)
       }
     })

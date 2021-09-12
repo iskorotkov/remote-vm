@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
-import { selectDroplet, Client } from '../services/digitalocean'
-import * as Sentry from '@sentry/node'
+import { Client, selectDroplet } from '../services/digitalocean'
 
 export function addDestroyVMCommand (context: vscode.ExtensionContext, client: Client) {
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.destroyVM', async () => {
@@ -36,10 +35,7 @@ export function addDestroyVMCommand (context: vscode.ExtensionContext, client: C
           message: 'Completed',
           increment: 10
         })
-
-        Sentry.captureMessage('successfully destroyed vm', Sentry.Severity.Log)
       } catch (error) {
-        Sentry.captureException(error)
         await vscode.window.showErrorMessage(`Error occurred: ${error}`)
       }
     })
