@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { extensionName, publisherName } from './const'
-import { serverHost } from './env'
+import { serverHost } from './var'
 
 export async function loginInBrowser () {
   const redirectUrl = vscode.env.uriScheme

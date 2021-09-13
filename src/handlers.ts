@@ -1,7 +1,7 @@
 import * as ClientOAuth2 from 'client-oauth2'
 import { parse } from 'querystring'
 import * as vscode from 'vscode'
-import { digitalOceanHost } from './env'
+import { digitalOceanHost } from './var'
 
 export class OAuthUriHandler implements vscode.UriHandler {
   handleUri (uri: vscode.Uri): vscode.ProviderResult<void> {
