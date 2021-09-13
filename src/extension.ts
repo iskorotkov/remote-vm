@@ -3,11 +3,11 @@ import { loginInBrowser } from './commands'
 import { OAuthUriHandler } from './handlers'
 
 export async function activate (context: vscode.ExtensionContext) {
-  console.log('activating remote-vm extension')
+  console.log('activating remote vm extension')
 
   context.subscriptions.push(vscode.window.registerUriHandler(new OAuthUriHandler()))
 
-  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.login', loginInBrowser))
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.signInViaBrowser', loginInBrowser))
 }
 
 export function deactivate () { }

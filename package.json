@@ -21,15 +21,15 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:remote-vm.login",
+        "onCommand:remote-vm.signInViaBrowser",
         "onUri"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "remote-vm.login",
-                "title": "Remote VM: Login"
+                "command": "remote-vm.signInViaBrowser",
+                "title": "Remote VM: Sign in via browser"
             }
         ]
     },
