@@ -13,7 +13,7 @@
         "url": "https://github.com/iskorotkov"
     },
     "publisher": "iskorotkov",
-    "icon": "resources/icon.png",
+    "icon": "resources/brand/icon.png",
     "engines": {
         "vscode": "^1.60.0"
     },
@@ -36,6 +36,42 @@
             {
                 "command": "remote-vm.signOut",
                 "title": "Remote VM: Sign out"
+            },
+            {
+                "command": "remote-vm.refreshVmList",
+                "title": "Refresh list",
+                "icon": {
+                    "dark": "resources/icons/dark/refresh.png",
+                    "light": "resources/icons/light/refresh.png"
+                }
+            },
+            {
+                "command": "remote-vm.createVm",
+                "title": "Create",
+                "icon": {
+                    "dark": "resources/icons/dark/add.png",
+                    "light": "resources/icons/light/add.png"
+                }
+            },
+            {
+                "command": "remote-vm.viewVmInfo",
+                "title": "View",
+                "icon": {
+                    "dark": "resources/icons/dark/inventory.png",
+                    "light": "resources/icons/light/inventory.png"
+                }
+            },
+            {
+                "command": "remote-vm.renameVm",
+                "title": "Rename",
+                "icon": {
+                    "dark": "resources/icons/dark/edit.png",
+                    "light": "resources/icons/light/edit.png"
+                }
+            },
+            {
+                "command": "remote-vm.deleteVm",
+                "title": "Delete"
             }
         ],
         "viewsContainers": {
@@ -43,7 +79,7 @@
                 {
                     "id": "remoteVm",
                     "title": "Remote VM",
-                    "icon": "resources/icon_bw.png"
+                    "icon": "resources/brand/icon_bw.png"
                 }
             ]
         },
@@ -54,6 +90,36 @@
                     "name": "VMs",
                     "contextualTitle": "Remote VM - VMs",
                     "type": "tree"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "remote-vm.refreshVmList",
+                    "when": "view == vms",
+                    "group": "navigation"
+                },
+                {
+                    "command": "remote-vm.createVm",
+                    "when": "view == vms",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "remote-vm.viewVmInfo",
+                    "when": "view == vms",
+                    "group": "inline"
+                },
+                {
+                    "command": "remote-vm.renameVm",
+                    "when": "view == vms",
+                    "group": "inline"
+                },
+                {
+                    "command": "remote-vm.deleteVm",
+                    "when": "view == vms"
                 }
             ]
         }
