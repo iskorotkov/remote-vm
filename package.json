@@ -107,12 +107,12 @@
             "view/item/context": [
                 {
                     "command": "remote-vm.renameVm",
-                    "when": "view == vmTree",
+                    "when": "view == vmTree && viewItem == vm",
                     "group": "500 edit"
                 },
                 {
                     "command": "remote-vm.deleteVm",
-                    "when": "view == vmTree",
+                    "when": "view == vmTree && viewItem == vm",
                     "group": "800 danger"
                 }
             ]
