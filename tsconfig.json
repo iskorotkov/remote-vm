@@ -8,7 +8,6 @@
         ],
         "sourceMap": true,
         "inlineSources": true,
-        "sourceRoot": "src",
         "rootDir": "src",
         "strict": true,
         "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
