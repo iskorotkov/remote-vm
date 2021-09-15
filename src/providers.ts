@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import { connectableVmContextValue, nonConnectableVmContextValue } from './const'
 import { Vm } from './models'
 
 export class VmTreeItem extends vscode.TreeItem {
@@ -92,7 +93,9 @@ export class VmTreeDataProvider implements vscode.TreeDataProvider<VmTreeItem> {
         const element = new VmTreeItem({
           id: item.id.toString(),
           label: item.name,
-          contextValue: 'vm',
+          contextValue: item.ipv4 !== undefined
+            ? connectableVmContextValue
+            : nonConnectableVmContextValue,
           description: item.status,
           collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
         })

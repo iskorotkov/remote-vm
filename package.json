@@ -25,6 +25,8 @@
         "onCommand:remote-vm.signOut",
         "onCommand:remote-vm.refreshVmTree",
         "onCommand:remote-vm.createVm",
+        "onCommand:remote-vm.connect",
+        "onCommand:remote-vm.connectInNewWindow",
         "onCommand:remote-vm.renameVm",
         "onCommand:remote-vm.deleteVm",
         "onView:vmTree",
@@ -56,6 +58,14 @@
                     "dark": "resources/icons/dark/add.png",
                     "light": "resources/icons/light/add.png"
                 }
+            },
+            {
+                "command": "remote-vm.connect",
+                "title": "Connect"
+            },
+            {
+                "command": "remote-vm.connectInNewWindow",
+                "title": "Connect (New Window)"
             },
             {
                 "command": "remote-vm.renameVm",
@@ -106,14 +116,24 @@
             ],
             "view/item/context": [
                 {
+                    "command": "remote-vm.connect",
+                    "when": "view == vmTree && viewItem == connectableVm",
+                    "group": "1"
+                },
+                {
+                    "command": "remote-vm.connectInNewWindow",
+                    "when": "view == vmTree && viewItem == connectableVm",
+                    "group": "1"
+                },
+                {
                     "command": "remote-vm.renameVm",
-                    "when": "view == vmTree && viewItem == vm",
-                    "group": "500 edit"
+                    "when": "view == vmTree && viewItem =~ /.*Vm/",
+                    "group": "1"
                 },
                 {
                     "command": "remote-vm.deleteVm",
-                    "when": "view == vmTree && viewItem == vm",
-                    "group": "800 danger"
+                    "when": "view == vmTree && viewItem =~ /.*Vm/",
+                    "group": "2"
                 }
             ]
         }

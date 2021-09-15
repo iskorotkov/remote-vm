@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { createVm, deleteVm, refreshVmTree, renameVm, signInViaBrowser, signOut } from './commands'
+import { connect, createVm, deleteVm, refreshVmTree, renameVm, signInViaBrowser, signOut } from './commands'
 import { OAuthUriHandler } from './handlers'
 import { createVmFromDroplet, Vm } from './models'
 import { VmTreeDataProvider } from './providers'
@@ -86,6 +86,36 @@ export async function activate (context: vscode.ExtensionContext) {
       }, error => {
         console.error(error)
         vscode.window.showErrorMessage('Couldn\'t create a new virtual machine with provided properties. Make sure you entered correct values')
+      })
+  }))
+
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.connect', async (item: vscode.TreeItem) => {
+    const vm = vms.find(vm => vm.id.toString() === item.id!)!
+
+    await connect({
+      host: vm.ipv4!,
+      user: 'root',
+      path: '/home',
+      openNewWindow: false
+    })
+      .catch(error => {
+        console.error(error)
+        vscode.window.showErrorMessage('Couldn\'t connect to a virtual machine')
+      })
+  }))
+
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.connectInNewWindow', async (item: vscode.TreeItem) => {
+    const vm = vms.find(vm => vm.id.toString() === item.id!)!
+
+    await connect({
+      host: vm.ipv4!,
+      user: 'root',
+      path: '/home',
+      openNewWindow: true
+    })
+      .catch(error => {
+        console.error(error)
+        vscode.window.showErrorMessage('Couldn\'t connect to a virtual machine in new window')
       })
   }))
 

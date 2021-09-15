@@ -157,6 +157,11 @@ export async function createVm ({ token }: { token: Token }) {
   return <Droplet>createdDroplet.data.droplet
 }
 
+export async function connect ({ host, user, path, openNewWindow }: { host: string, user: string, path: string, openNewWindow: boolean }) {
+  const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${user}@${host}${path}`)
+  await vscode.commands.executeCommand('vscode.openFolder', uri, openNewWindow)
+}
+
 export async function renameVm ({ token, id, name }: { token: Token, id: string, name: string }) {
   const selectedName = await vscode.window.showInputBox({
     placeHolder: 'Enter virtual machine name',
