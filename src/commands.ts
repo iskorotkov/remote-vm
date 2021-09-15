@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { randomInt } from 'crypto'
 import * as vscode from 'vscode'
 import { extensionName, publisherName } from './const'
 import { Droplet, Image, Region, Size, SshKey } from './digitalocean/src'
@@ -73,7 +74,8 @@ export async function createVm ({ token }: { token: Token }) {
       label: region.name,
       description: region.slug
     }), {
-    placeHolder: 'Select region'
+    placeHolder: 'Select region',
+    ignoreFocusOut: true
   })
 
   if (selectedRegion === undefined) {
@@ -90,7 +92,8 @@ export async function createVm ({ token }: { token: Token }) {
       label: image.description,
       description: image.slug
     }), {
-    placeHolder: 'Select image'
+    placeHolder: 'Select image',
+    ignoreFocusOut: true
   })
 
   if (selectedImage === undefined) {
@@ -108,7 +111,8 @@ export async function createVm ({ token }: { token: Token }) {
       label: `${size.vcpus} CPUs / ${size.memory / 1024} GB / ${size.disk} GB / $${size.price_monthly}`,
       description: size.slug
     }), {
-    placeHolder: 'Select size'
+    placeHolder: 'Select size',
+    ignoreFocusOut: true
   })
 
   if (selectedSize === undefined) {
@@ -123,7 +127,8 @@ export async function createVm ({ token }: { token: Token }) {
       picked: true
     }), {
     placeHolder: 'Select SSH keys used to connect to virtual machine',
-    canPickMany: true
+    canPickMany: true,
+    ignoreFocusOut: true
   })
 
   if (selectedKeys === undefined) {
@@ -131,12 +136,18 @@ export async function createVm ({ token }: { token: Token }) {
   }
 
   const selectedName = await vscode.window.showInputBox({
-    placeHolder: 'Enter virtual machine name (can be changed later)'
+    placeHolder: 'Enter virtual machine name (can be changed later)',
+    value: `${selectedImage.description}-${randomInt(100)}`,
+    ignoreFocusOut: true,
+    validateInput: validateName
   })
 
   if (selectedName === undefined) {
     return null
   }
+
+  // Disable monitoring for FreeBSD and Rancher only.
+  const enableMonitoring = selectedImage.description!.match(/rancher|freebsd/) === null
 
   const createdDroplet = await axios(await token.sign({
     method: 'POST',
@@ -149,7 +160,7 @@ export async function createVm ({ token }: { token: Token }) {
       ssh_keys: selectedKeys.map(key => key.description),
       backups: false,
       ipv6: true,
-      monitoring: true,
+      monitoring: enableMonitoring,
       tags: []
     }
   }))
@@ -165,7 +176,9 @@ export async function connect ({ host, user, path, openNewWindow }: { host: stri
 export async function renameVm ({ token, id, name }: { token: Token, id: string, name: string }) {
   const selectedName = await vscode.window.showInputBox({
     placeHolder: 'Enter virtual machine name',
-    value: name
+    value: name,
+    ignoreFocusOut: true,
+    validateInput: validateName
   })
 
   if (selectedName === undefined) {
@@ -189,4 +202,21 @@ export async function deleteVm ({ token, id }: { token: Token, id: string }) {
     method: 'DELETE',
     url: `${digitalOceanHost}/v2/droplets/${id}`
   }))
+}
+
+function validateName (name: string): string {
+  if (name.length === 0) {
+    return 'Name can\'t be empty'
+  }
+
+  if (name.length > 64) {
+    return 'Name must be <=64 characters long'
+  }
+
+  // If not matched by pattern.
+  if (name.match(/^[a-zA-Z0-9_\\-]*$/) === null) {
+    return 'Name must contain alphanumeric characters only'
+  }
+
+  return ''
 }
