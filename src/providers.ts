@@ -28,26 +28,38 @@ export class VmTreeDataProvider implements vscode.TreeDataProvider<VmTreeItem> {
         return Promise.reject(new Error('unknown element in vm list provider'))
       }
 
-      return Promise.resolve([
+      const elements = [
+        new VmTreeItem({ label: `Region: ${item.region}`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
         new VmTreeItem({ label: `OS: ${item.os}`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
         new VmTreeItem({ label: `CPUs: ${item.cpus}`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
         new VmTreeItem({ label: `RAM: ${item.ram} GB`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
-        new VmTreeItem({ label: `Storage: ${item.storage} GB`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
-        new VmTreeItem({ label: `IPv4: ${item.ipv4 ?? 'none'}`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
-        new VmTreeItem({ label: `IPv6: ${item.ipv6 ?? 'none'}`, collapsibleState: vscode.TreeItemCollapsibleState.None }),
-        new VmTreeItem({ label: `Tags: ${item.tags.join(', ')}`, collapsibleState: vscode.TreeItemCollapsibleState.None })
-      ])
+        new VmTreeItem({ label: `Storage: ${item.storage} GB`, collapsibleState: vscode.TreeItemCollapsibleState.None })
+      ]
+
+      if (item.ipv4 !== undefined) {
+        elements.push(new VmTreeItem({ label: `IPv4: ${item.ipv4 ?? '-'}`, collapsibleState: vscode.TreeItemCollapsibleState.None }))
+      }
+
+      if (item.ipv6 !== undefined) {
+        elements.push(new VmTreeItem({ label: `IPv6: ${item.ipv6 ?? '-'}`, collapsibleState: vscode.TreeItemCollapsibleState.None }))
+      }
+
+      if (item.tags.length > 0) {
+        elements.push(new VmTreeItem({ label: `Tags: ${item.tags.join(', ')}`, collapsibleState: vscode.TreeItemCollapsibleState.None }))
+      }
+
+      return Promise.resolve(elements)
     }
 
     // Element is undefined if we are creating root items (VMs themselves).
-    if (element !== undefined) {
+    if (element === undefined) {
       const elements = []
 
       for (const item of this.items.values()) {
         const element = new VmTreeItem({
           id: item.id.toString(),
           label: item.name,
-          description: item.region,
+          description: item.status,
           collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
         })
         elements.push(element)
@@ -63,9 +75,9 @@ export class VmTreeDataProvider implements vscode.TreeDataProvider<VmTreeItem> {
   refresh (items: Vm[]) {
     this.items.clear()
 
-    items.forEach((value, index) => {
-      this.items.set(index.toString(), value)
-    })
+    for (const item of items) {
+      this.items.set(item.id.toString(), item)
+    }
 
     this._onDidChangeTreeData.fire()
   }

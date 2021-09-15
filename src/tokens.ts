@@ -1,26 +1,66 @@
+import axios from 'axios'
 import * as vscode from 'vscode'
 import { digitalOceanHost } from './var'
-import ClientOAuth2 = require('client-oauth2')
 
-const refreshTokenKey = 'refresh-token'
+const tokenKey = 'token'
 
-export async function saveToken (context: vscode.ExtensionContext, token: ClientOAuth2.Token) {
-  await context.secrets.store(refreshTokenKey, token.refreshToken)
+interface Request {
+  headers?: any
+  [key: string]: any
 }
 
-export async function retrieveToken (context: vscode.ExtensionContext): Promise<ClientOAuth2.Token | null> {
-  const refreshToken = await context.secrets.get(refreshTokenKey)
-  const client = new ClientOAuth2({
-    accessTokenUri: `${digitalOceanHost}/v2/auth/token`
-  })
+export class Token {
+  constructor (
+    public accessToken: string,
+    public refreshToken: string,
+    public expiry: Date,
+    public tokenType: string
+  ) { }
 
-  if (refreshToken !== undefined) {
-    return client.createToken('', refreshToken, {})
+  sign<T extends Request> (request: T): T {
+    if (request.headers === undefined) {
+      request.headers = {}
+    }
+
+    request.headers.Authorization = `Bearer ${this.accessToken}`
+    return request
+  }
+
+  expired (): boolean {
+    return this.expiry <= new Date()
+  }
+
+  async refresh () {
+    const url = `${digitalOceanHost}/v1/oauth/token?${this.query()}`
+    const response = await axios.post(url)
+
+    this.accessToken = response.data.access_token
+    this.refreshToken = response.data.refresh_token
+    this.expiry = new Date(response.data.created_at) + response.data.expires_in
+    this.tokenType = response.data.token_type
+  }
+
+  private query (): string {
+    return `grant_type=refresh_token&refresh_token=${this.refreshToken}`
+  }
+}
+
+export async function saveToken (context: vscode.ExtensionContext, token: Token) {
+  await context.secrets.store(tokenKey, JSON.stringify(token))
+}
+
+export async function retrieveToken (context: vscode.ExtensionContext): Promise<Token | null> {
+  const saved = await context.secrets.get(tokenKey)
+
+  if (saved !== undefined) {
+    const json = JSON.parse(saved)
+
+    return Object.assign(new Token('', '', new Date(), ''), json)
   }
 
   return null
 }
 
 export async function deleteToken (context: vscode.ExtensionContext) {
-  await context.secrets.delete(refreshTokenKey)
+  await context.secrets.delete(tokenKey)
 }

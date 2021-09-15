@@ -1,11 +1,9 @@
-import * as ClientOAuth2 from 'client-oauth2'
 import { parse } from 'querystring'
 import * as vscode from 'vscode'
-import { saveToken } from './tokens'
-import { digitalOceanHost } from './var'
+import { saveToken, Token } from './tokens'
 
 export class OAuthUriHandler implements vscode.UriHandler {
-  constructor (private context: vscode.ExtensionContext) {
+  constructor (private context: vscode.ExtensionContext, private callback: (token: Token) => void) {
   }
 
   handleUri (uri: vscode.Uri): vscode.ProviderResult<void> {
@@ -29,12 +27,7 @@ export class OAuthUriHandler implements vscode.UriHandler {
           throw Error('no access token, refresh token or expiry set on request')
         }
 
-        const client = new ClientOAuth2({
-          accessTokenUri: `${digitalOceanHost}/v2/auth/token`
-        })
-
-        const token = client.createToken(accessToken, refreshToken, tokenType, {})
-        token.expiresIn(new Date(expiry))
+        const token = new Token(accessToken, refreshToken, new Date(expiry), tokenType)
 
         console.log(`get token of type ${token.tokenType}`)
 
@@ -42,6 +35,8 @@ export class OAuthUriHandler implements vscode.UriHandler {
           .catch(err => console.error(`error saving token: ${err}`))
 
         console.log('token saved')
+
+        this.callback(token)
       } catch (error) {
         console.error(`error parsing token in callback: ${error}`)
         throw error

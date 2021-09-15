@@ -2,6 +2,7 @@ export class Vm {
   constructor (
     public id: number,
     public name: string,
+    public status: string,
     public cpus: number,
     public ram: number,
     public storage: number,
