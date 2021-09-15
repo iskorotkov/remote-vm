@@ -42,6 +42,7 @@ export async function activate (context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage('Can\'t refresh VM tree: no auth token')
     }
   }))
+
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVm', () => {
     if (token !== null) {
       createVm({ token: token })
@@ -51,18 +52,20 @@ export async function activate (context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage('Can\'t create a new VM: no auth token')
     }
   }))
-  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.renameVm', () => {
+
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.renameVm', (item: vscode.TreeItem) => {
     if (token !== null) {
-      renameVm({ token: token })
+      renameVm({ token: token, id: item.id! })
 
       setTimeout(() => vscode.commands.executeCommand('remote-vm.refreshVmTree'), 1000)
     } else {
       vscode.window.showErrorMessage('Can\'t create a new VM: no auth token')
     }
   }))
-  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.deleteVm', () => {
+
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.deleteVm', (item: vscode.TreeItem) => {
     if (token !== null) {
-      deleteVm({ token: token })
+      deleteVm({ token: token, id: item.id! })
 
       setTimeout(() => vscode.commands.executeCommand('remote-vm.refreshVmTree'), 1000)
     } else {

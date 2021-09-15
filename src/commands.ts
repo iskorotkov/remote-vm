@@ -1,4 +1,4 @@
-import axios, { Method } from 'axios'
+import axios from 'axios'
 import * as vscode from 'vscode'
 import { extensionName, publisherName } from './const'
 import { Droplet, DropletNetworks, Image, NetworkV4, NetworkV6, Region, Size, SshKey } from './digitalocean/src'
@@ -17,9 +17,9 @@ export async function signOut (props: { context: vscode.ExtensionContext }) {
   await deleteToken(props.context)
 }
 
-export async function refreshVmTree (props: { token: Token }) {
-  const response = await axios(await props.token.sign({
-    method: <Method>'GET',
+export async function refreshVmTree ({ token }: { token: Token }) {
+  const response = await axios(await token.sign({
+    method: 'GET',
     url: `${digitalOceanHost}/v2/droplets`,
     params: {
       per_page: 200,
@@ -40,25 +40,25 @@ export async function refreshVmTree (props: { token: Token }) {
   })
 }
 
-export async function createVm (props: { token: Token }) {
-  const sizesPromise = axios(await props.token.sign({
-    method: <Method>'GET',
+export async function createVm ({ token }: { token: Token }) {
+  const sizesPromise = axios(await token.sign({
+    method: 'GET',
     url: `${digitalOceanHost}/v2/sizes`,
     params: {
       per_page: 200,
       page: 1
     }
   }))
-  const regionsPromise = axios(await props.token.sign({
-    method: <Method>'GET',
+  const regionsPromise = axios(await token.sign({
+    method: 'GET',
     url: `${digitalOceanHost}/v2/regions`,
     params: {
       per_page: 200,
       page: 1
     }
   }))
-  const imagesPromise = axios(await props.token.sign({
-    method: <Method>'GET',
+  const imagesPromise = axios(await token.sign({
+    method: 'GET',
     url: `${digitalOceanHost}/v2/images`,
     params: {
       per_page: 200,
@@ -66,8 +66,8 @@ export async function createVm (props: { token: Token }) {
       type: 'distribution'
     }
   }))
-  const keysPromise = axios(await props.token.sign({
-    method: <Method>'GET',
+  const keysPromise = axios(await token.sign({
+    method: 'GET',
     url: `${digitalOceanHost}/v2/account/keys`,
     params: {
       per_page: 200,
@@ -147,8 +147,8 @@ export async function createVm (props: { token: Token }) {
     return
   }
 
-  await axios(await props.token.sign({
-    method: <Method>'POST',
+  await axios(await token.sign({
+    method: 'POST',
     url: `${digitalOceanHost}/v2/droplets`,
     data: {
       name: selectedName,
@@ -164,10 +164,28 @@ export async function createVm (props: { token: Token }) {
   }))
 }
 
-export async function renameVm (props: { token: Token }) {
+export async function renameVm ({ token, id }: { token: Token, id: string }) {
+  const selectedName = await vscode.window.showInputBox({
+    placeHolder: 'Enter virtual machine name'
+  })
 
+  if (selectedName === undefined) {
+    return
+  }
+
+  await axios(await token.sign({
+    method: 'POST',
+    url: `${digitalOceanHost}/v2/droplets/${id}/actions`,
+    data: {
+      type: 'rename',
+      name: selectedName
+    }
+  }))
 }
 
-export async function deleteVm (props: { token: Token }) {
-
+export async function deleteVm ({ token, id }: { token: Token, id: string }) {
+  await axios(await token.sign({
+    method: 'DELETE',
+    url: `${digitalOceanHost}/v2/droplets/${id}`
+  }))
 }
