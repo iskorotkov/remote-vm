@@ -1,9 +1,9 @@
 import axios from 'axios'
 import * as vscode from 'vscode'
 import { extensionName, publisherName } from './const'
-import { Droplet, DropletNetworks, Image, NetworkV4, NetworkV6, Region, Size, SshKey } from './digitalocean/src'
-import { Vm } from './models'
-import { deleteToken, Token } from './tokens'
+import { Droplet, Image, Region, Size, SshKey } from './digitalocean/src'
+import { createVmFromDroplet } from './models'
+import { Token } from './tokens'
 import { digitalOceanHost, serverHost } from './var'
 
 export async function signInViaBrowser () {
@@ -13,8 +13,8 @@ export async function signInViaBrowser () {
   await vscode.env.openExternal(vscode.Uri.parse(uri))
 }
 
-export async function signOut (props: { context: vscode.ExtensionContext }) {
-  await deleteToken(props.context)
+export async function signOut ({ token }: { token: Token }) {
+  await token.deleteFromSecrets()
 }
 
 export async function refreshVmTree ({ token }: { token: Token }) {
@@ -28,16 +28,7 @@ export async function refreshVmTree ({ token }: { token: Token }) {
   }))
 
   const droplets = <Droplet[]>response.data.droplets
-
-  return droplets.map(item => {
-    const region = <Region>item.region
-    const image = <Image>item.image
-    const networks = <DropletNetworks>item.networks
-    const v4 = <NetworkV4>networks.v4
-    const v6 = <NetworkV6>networks.v6
-
-    return new Vm(item.id, item.name, item.status, item.vcpus, item.memory / 1024, item.disk, region.name, image.description, item.tags, v4.ipAddress, v6.ipAddress)
-  })
+  return droplets.map(createVmFromDroplet)
 }
 
 export async function createVm ({ token }: { token: Token }) {
@@ -86,7 +77,7 @@ export async function createVm ({ token }: { token: Token }) {
   })
 
   if (selectedRegion === undefined) {
-    return
+    return null
   }
 
   const images = <Image[]>(await imagesPromise).data.images
@@ -103,7 +94,7 @@ export async function createVm ({ token }: { token: Token }) {
   })
 
   if (selectedImage === undefined) {
-    return
+    return null
   }
 
   const sizes = <Size[]>(await sizesPromise).data.sizes
@@ -121,7 +112,7 @@ export async function createVm ({ token }: { token: Token }) {
   })
 
   if (selectedSize === undefined) {
-    return
+    return null
   }
 
   const keys = <SshKey[]>(await keysPromise).data.ssh_keys
@@ -136,7 +127,7 @@ export async function createVm ({ token }: { token: Token }) {
   })
 
   if (selectedKeys === undefined) {
-    return
+    return null
   }
 
   const selectedName = await vscode.window.showInputBox({
@@ -144,10 +135,10 @@ export async function createVm ({ token }: { token: Token }) {
   })
 
   if (selectedName === undefined) {
-    return
+    return null
   }
 
-  await axios(await token.sign({
+  const createdDroplet = await axios(await token.sign({
     method: 'POST',
     url: `${digitalOceanHost}/v2/droplets`,
     data: {
@@ -162,15 +153,18 @@ export async function createVm ({ token }: { token: Token }) {
       tags: []
     }
   }))
+
+  return <Droplet>createdDroplet.data.droplet
 }
 
-export async function renameVm ({ token, id }: { token: Token, id: string }) {
+export async function renameVm ({ token, id, name }: { token: Token, id: string, name: string }) {
   const selectedName = await vscode.window.showInputBox({
-    placeHolder: 'Enter virtual machine name'
+    placeHolder: 'Enter virtual machine name',
+    value: name
   })
 
   if (selectedName === undefined) {
-    return
+    return null
   }
 
   await axios(await token.sign({
@@ -181,6 +175,8 @@ export async function renameVm ({ token, id }: { token: Token, id: string }) {
       name: selectedName
     }
   }))
+
+  return selectedName
 }
 
 export async function deleteVm ({ token, id }: { token: Token, id: string }) {

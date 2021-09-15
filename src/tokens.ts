@@ -10,12 +10,29 @@ interface Request {
 }
 
 export class Token {
+  private context?: vscode.ExtensionContext
+
   constructor (
     public accessToken: string,
     public refreshToken: string,
     public expiry: Date,
-    public tokenType: string
-  ) { }
+    public tokenType: string,
+    context: vscode.ExtensionContext
+  ) {
+    this.context = context
+  }
+
+  static async loadFromSecrets (context: vscode.ExtensionContext): Promise<Token | null> {
+    const saved = await context.secrets.get(tokenKey)
+
+    if (saved !== undefined) {
+      const json = JSON.parse(saved)
+
+      return Object.assign(new Token('', '', new Date(), '', context), json)
+    }
+
+    return null
+  }
 
   async sign<T extends Request> (request: T): Promise<T> {
     if (this.expired()) {
@@ -30,11 +47,24 @@ export class Token {
     return request
   }
 
-  expired (): boolean {
+  async saveToSecrets () {
+    const context = this.context!
+    this.context = undefined
+
+    await context.secrets.store(tokenKey, JSON.stringify(this))
+  }
+
+  async deleteFromSecrets () {
+    const context = this.context!
+
+    await context.secrets.delete(tokenKey)
+  }
+
+  private expired (): boolean {
     return this.expiry <= new Date()
   }
 
-  async refresh () {
+  private async refresh () {
     const response = await axios({
       method: 'POST',
       url: `${digitalOceanHost}/v1/oauth/token`,
@@ -48,25 +78,7 @@ export class Token {
     this.refreshToken = response.data.refresh_token
     this.expiry = new Date(response.data.created_at) + response.data.expires_in
     this.tokenType = response.data.token_type
+
+    await this.saveToSecrets()
   }
-}
-
-export async function saveToken (context: vscode.ExtensionContext, token: Token) {
-  await context.secrets.store(tokenKey, JSON.stringify(token))
-}
-
-export async function retrieveToken (context: vscode.ExtensionContext): Promise<Token | null> {
-  const saved = await context.secrets.get(tokenKey)
-
-  if (saved !== undefined) {
-    const json = JSON.parse(saved)
-
-    return Object.assign(new Token('', '', new Date(), ''), json)
-  }
-
-  return null
-}
-
-export async function deleteToken (context: vscode.ExtensionContext) {
-  await context.secrets.delete(tokenKey)
 }

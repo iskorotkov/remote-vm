@@ -1,6 +1,6 @@
 import { parse } from 'querystring'
 import * as vscode from 'vscode'
-import { saveToken, Token } from './tokens'
+import { Token } from './tokens'
 
 export class OAuthUriHandler implements vscode.UriHandler {
   constructor (private context: vscode.ExtensionContext, private callback: (token: Token) => void) {
@@ -27,11 +27,11 @@ export class OAuthUriHandler implements vscode.UriHandler {
           throw Error('no access token, refresh token or expiry set on request')
         }
 
-        const token = new Token(accessToken, refreshToken, new Date(expiry), tokenType)
+        const token = new Token(accessToken, refreshToken, new Date(expiry), tokenType, this.context)
 
         console.log(`get token of type ${token.tokenType}`)
 
-        saveToken(this.context, token)
+        token.saveToSecrets()
           .catch(err => console.error(`error saving token: ${err}`))
 
         console.log('token saved')
