@@ -18,8 +18,8 @@ export function createVmFromDroplet (droplet: Droplet): Vm {
   const region = <Region>droplet.region
   const image = <Image>droplet.image
   const networks = <DropletNetworks>droplet.networks
-  const v4 = <NetworkV4>networks.v4
-  const v6 = <NetworkV6>networks.v6
+  const v4 = <NetworkV4[]>networks.v4
+  const v6 = <NetworkV6[]>networks.v6
 
   return {
     id: droplet.id,
@@ -31,7 +31,9 @@ export function createVmFromDroplet (droplet: Droplet): Vm {
     region: region.name,
     os: image.description,
     tags: droplet.tags,
-    ipv4: v4.ipAddress,
-    ipv6: v6.ipAddress
+    // @ts-ignore
+    ipv4: v4.find(v => v.type === 'public')?.ip_address,
+    // @ts-ignore
+    ipv6: v6.find(v => v.type === 'public')?.ip_address
   }
 }

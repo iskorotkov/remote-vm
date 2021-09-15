@@ -126,7 +126,7 @@ export async function activate (context: vscode.ExtensionContext) {
     deleteVm({ token: token, id: item.id! })
       .then(() => {
         const deletedAt = vms.findIndex(vm => vm.id.toString() === item.id!)
-        vms = vms.splice(deletedAt, 1)
+        vms.splice(deletedAt, 1)
 
         vmProvider.refresh(vms)
       }, error => {
