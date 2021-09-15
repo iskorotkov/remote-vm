@@ -23,7 +23,7 @@
     "activationEvents": [
         "onCommand:remote-vm.signInViaBrowser",
         "onCommand:remote-vm.signOut",
-        "onView:vms",
+        "onView:vmTree",
         "onUri"
     ],
     "main": "./out/extension.js",
@@ -54,20 +54,8 @@
                 }
             },
             {
-                "command": "remote-vm.viewVmInfo",
-                "title": "View",
-                "icon": {
-                    "dark": "resources/icons/dark/inventory.png",
-                    "light": "resources/icons/light/inventory.png"
-                }
-            },
-            {
                 "command": "remote-vm.renameVm",
-                "title": "Rename",
-                "icon": {
-                    "dark": "resources/icons/dark/edit.png",
-                    "light": "resources/icons/light/edit.png"
-                }
+                "title": "Rename"
             },
             {
                 "command": "remote-vm.deleteVm",
@@ -86,40 +74,42 @@
         "views": {
             "remoteVm": [
                 {
-                    "id": "vms",
-                    "name": "VMs",
-                    "contextualTitle": "Remote VM - VMs",
+                    "id": "vmTree",
+                    "name": "Virtual Machines",
+                    "contextualTitle": "Remote VM - Virtual Machines",
                     "type": "tree"
                 }
             ]
         },
+        "viewsWelcome": [
+            {
+                "view": "vmTree",
+                "contents": "No virtual machines found"
+            }
+        ],
         "menus": {
             "view/title": [
                 {
                     "command": "remote-vm.refreshVmList",
-                    "when": "view == vms",
+                    "when": "view == vmTree",
                     "group": "navigation"
                 },
                 {
                     "command": "remote-vm.createVm",
-                    "when": "view == vms",
+                    "when": "view == vmTree",
                     "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "remote-vm.viewVmInfo",
-                    "when": "view == vms",
-                    "group": "inline"
-                },
-                {
                     "command": "remote-vm.renameVm",
-                    "when": "view == vms",
-                    "group": "inline"
+                    "when": "view == vmTree",
+                    "group": "500 edit"
                 },
                 {
                     "command": "remote-vm.deleteVm",
-                    "when": "view == vms"
+                    "when": "view == vmTree",
+                    "group": "800 danger"
                 }
             ]
         }
