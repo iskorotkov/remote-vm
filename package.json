@@ -23,6 +23,10 @@
     "activationEvents": [
         "onCommand:remote-vm.signInViaBrowser",
         "onCommand:remote-vm.signOut",
+        "onCommand:remote-vm.refreshVmTree",
+        "onCommand:remote-vm.createVm",
+        "onCommand:remote-vm.renameVm",
+        "onCommand:remote-vm.deleteVm",
         "onView:vmTree",
         "onUri"
     ],
@@ -38,7 +42,7 @@
                 "title": "Remote VM: Sign out"
             },
             {
-                "command": "remote-vm.refreshVmList",
+                "command": "remote-vm.refreshVmTree",
                 "title": "Refresh list",
                 "icon": {
                     "dark": "resources/icons/dark/refresh.png",
@@ -90,7 +94,7 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "remote-vm.refreshVmList",
+                    "command": "remote-vm.refreshVmTree",
                     "when": "view == vmTree",
                     "group": "navigation"
                 },
@@ -121,7 +125,8 @@
         "watch": "tsc -watch -p ./",
         "pretest": "yarn run compile && yarn run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "types": "tsc src/digitalocean/**.*.js --declaration --allowJs --emitDeclarationOnly --outdir src/digitalocean"
     },
     "devDependencies": {
         "@types/glob": "^7.1.3",
@@ -144,8 +149,6 @@
     },
     "dependencies": {
         "axios": "^0.21.4",
-        "client-oauth2": "^4.3.3",
-        "query-string": "^7.0.1",
         "tslib": "^2.1.0"
     }
 }
