@@ -27,6 +27,7 @@ export async function activate (context: vscode.ExtensionContext) {
   // Commands: auth.
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.signInViaBrowser', signInViaBrowser))
   context.subscriptions.push(vscode.commands.registerCommand('remote-vm.signOut', () => {
+    token = null
     signOut({ context: context })
 
     vmProvider.refresh([])
@@ -41,15 +42,39 @@ export async function activate (context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage('Can\'t refresh VM tree: no auth token')
     }
   }))
-  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVm', createVm))
-  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.renameVm', renameVm))
-  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.deleteVm', deleteVm))
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.createVm', () => {
+    if (token !== null) {
+      createVm({ token: token })
+
+      setTimeout(() => vscode.commands.executeCommand('remote-vm.refreshVmTree'), 1000)
+    } else {
+      vscode.window.showErrorMessage('Can\'t create a new VM: no auth token')
+    }
+  }))
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.renameVm', () => {
+    if (token !== null) {
+      renameVm({ token: token })
+
+      setTimeout(() => vscode.commands.executeCommand('remote-vm.refreshVmTree'), 1000)
+    } else {
+      vscode.window.showErrorMessage('Can\'t create a new VM: no auth token')
+    }
+  }))
+  context.subscriptions.push(vscode.commands.registerCommand('remote-vm.deleteVm', () => {
+    if (token !== null) {
+      deleteVm({ token: token })
+
+      setTimeout(() => vscode.commands.executeCommand('remote-vm.refreshVmTree'), 1000)
+    } else {
+      vscode.window.showErrorMessage('Can\'t create a new VM: no auth token')
+    }
+  }))
 
   // Tree views.
   context.subscriptions.push(vscode.window.registerTreeDataProvider('vmTree', vmProvider))
 
   if (token !== null) {
-    await vscode.commands.executeCommand('remote-vm.refreshVmTree')
+    vscode.commands.executeCommand('remote-vm.refreshVmTree')
   }
 }
 

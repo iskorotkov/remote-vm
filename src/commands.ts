@@ -1,7 +1,7 @@
 import axios, { Method } from 'axios'
 import * as vscode from 'vscode'
 import { extensionName, publisherName } from './const'
-import { Droplet, DropletNetworks, Image, NetworkV4, NetworkV6, Region } from './digitalocean/src'
+import { Droplet, DropletNetworks, Image, NetworkV4, NetworkV6, Region, Size, SshKey } from './digitalocean/src'
 import { Vm } from './models'
 import { deleteToken, Token } from './tokens'
 import { digitalOceanHost, serverHost } from './var'
@@ -18,13 +18,13 @@ export async function signOut (props: { context: vscode.ExtensionContext }) {
 }
 
 export async function refreshVmTree (props: { token: Token }) {
-  if (props.token.expired()) {
-    await props.token.refresh()
-  }
-
-  const response = await axios(props.token.sign({
+  const response = await axios(await props.token.sign({
     method: <Method>'GET',
-    url: `${digitalOceanHost}/v2/droplets`
+    url: `${digitalOceanHost}/v2/droplets`,
+    params: {
+      per_page: 200,
+      page: 1
+    }
   }))
 
   const droplets = <Droplet[]>response.data.droplets
@@ -40,14 +40,134 @@ export async function refreshVmTree (props: { token: Token }) {
   })
 }
 
-export async function createVm (props: { token: Token, vm: Vm }) {
+export async function createVm (props: { token: Token }) {
+  const sizesPromise = axios(await props.token.sign({
+    method: <Method>'GET',
+    url: `${digitalOceanHost}/v2/sizes`,
+    params: {
+      per_page: 200,
+      page: 1
+    }
+  }))
+  const regionsPromise = axios(await props.token.sign({
+    method: <Method>'GET',
+    url: `${digitalOceanHost}/v2/regions`,
+    params: {
+      per_page: 200,
+      page: 1
+    }
+  }))
+  const imagesPromise = axios(await props.token.sign({
+    method: <Method>'GET',
+    url: `${digitalOceanHost}/v2/images`,
+    params: {
+      per_page: 200,
+      page: 1,
+      type: 'distribution'
+    }
+  }))
+  const keysPromise = axios(await props.token.sign({
+    method: <Method>'GET',
+    url: `${digitalOceanHost}/v2/account/keys`,
+    params: {
+      per_page: 200,
+      page: 1
+    }
+  }))
+
+  const regions = <Region[]>(await regionsPromise).data.regions
+  const selectedRegion = await vscode.window.showQuickPick(regions
+    .filter(region => region.available)
+    .map(region => <vscode.QuickPickItem>{
+      label: region.name,
+      description: region.slug
+    }), {
+    placeHolder: 'Select region'
+  })
+
+  if (selectedRegion === undefined) {
+    return
+  }
+
+  const images = <Image[]>(await imagesPromise).data.images
+  const selectedImage = await vscode.window.showQuickPick(images
+    .filter(image => {
+      const regions = <string[]>(image.regions)
+      return regions.indexOf(selectedRegion.description!) !== -1
+    })
+    .map(image => <vscode.QuickPickItem>{
+      label: image.description,
+      description: image.slug
+    }), {
+    placeHolder: 'Select image'
+  })
+
+  if (selectedImage === undefined) {
+    return
+  }
+
+  const sizes = <Size[]>(await sizesPromise).data.sizes
+  const selectedSize = await vscode.window.showQuickPick(sizes
+    .filter(size => {
+      const regions = <string[]>(size.regions)
+      return regions.indexOf(selectedRegion.description!) !== -1
+    })
+    .map(size => <vscode.QuickPickItem>{
+      // @ts-ignore
+      label: `${size.vcpus} CPUs / ${size.memory / 1024} GB / ${size.disk} GB / $${size.price_monthly}`,
+      description: size.slug
+    }), {
+    placeHolder: 'Select size'
+  })
+
+  if (selectedSize === undefined) {
+    return
+  }
+
+  const keys = <SshKey[]>(await keysPromise).data.ssh_keys
+  const selectedKeys = await vscode.window.showQuickPick(keys
+    .map(key => <vscode.QuickPickItem>{
+      label: key.name,
+      description: key.fingerprint,
+      picked: true
+    }), {
+    placeHolder: 'Select SSH keys used to connect to virtual machine',
+    canPickMany: true
+  })
+
+  if (selectedKeys === undefined) {
+    return
+  }
+
+  const selectedName = await vscode.window.showInputBox({
+    placeHolder: 'Enter virtual machine name (can be changed later)'
+  })
+
+  if (selectedName === undefined) {
+    return
+  }
+
+  await axios(await props.token.sign({
+    method: <Method>'POST',
+    url: `${digitalOceanHost}/v2/droplets`,
+    data: {
+      name: selectedName,
+      region: selectedRegion.description,
+      size: selectedSize.description,
+      image: selectedImage.description,
+      ssh_keys: selectedKeys.map(key => key.description),
+      backups: false,
+      ipv6: true,
+      monitoring: true,
+      tags: []
+    }
+  }))
+}
+
+export async function renameVm (props: { token: Token }) {
 
 }
 
-export async function renameVm (props: { token: Token, id: number, name: string }) {
-
-}
-
-export async function deleteVm (props: { token: Token, id: number }) {
+export async function deleteVm (props: { token: Token }) {
 
 }
