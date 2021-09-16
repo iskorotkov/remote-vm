@@ -48,16 +48,16 @@ export class Token {
   }
 
   async saveToSecrets () {
-    const context = this.context!
-    this.context = undefined
-
-    await context.secrets.store(tokenKey, JSON.stringify(this))
+    await this.context!.secrets.store(tokenKey, JSON.stringify({
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
+      expiry: this.expiry,
+      tokenType: this.tokenType
+    }))
   }
 
   async deleteFromSecrets () {
-    const context = this.context!
-
-    await context.secrets.delete(tokenKey)
+    await this.context!.secrets.delete(tokenKey)
   }
 
   private expired (): boolean {
