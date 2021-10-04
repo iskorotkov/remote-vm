@@ -2,7 +2,7 @@
     "name": "remote-vm",
     "displayName": "Remote VM",
     "description": "Automatically create, setup and connect to Digital Ocean VM for effective remote development",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "repository": {
         "type": "git",
         "url": "https://github.com/iskorotkov/remote-vm.git"
