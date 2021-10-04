@@ -2,7 +2,7 @@
     "name": "remote-vm",
     "displayName": "Remote VM",
     "description": "Automatically create, setup and connect to Digital Ocean VM for effective remote development",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "repository": {
         "type": "git",
         "url": "https://github.com/iskorotkov/remote-vm.git"
@@ -139,7 +139,8 @@
         }
     },
     "scripts": {
-        "publish": "vsce package",
+        "package": "vsce package",
+        "publish": "vsce publish",
         "vscode:prepublish": "yarn run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
@@ -155,7 +156,7 @@
         "@types/vscode": "^1.53.0",
         "@typescript-eslint/eslint-plugin": "^4.16.1",
         "@typescript-eslint/parser": "^4.16.1",
-        "esbuild": "^0.11.16",
+        "esbuild": "^0.13.3",
         "eslint": "^7.12.1",
         "eslint-config-standard": "^16.0.2",
         "eslint-plugin-import": "^2.22.1",
